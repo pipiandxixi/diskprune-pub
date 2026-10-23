@@ -3,6 +3,7 @@
 . "$(dirname "$0")/_common.sh"
 C="$PUB/policy/candidate" S="$PUB/policy/stable"
 "$CLEANUPS" policy-verify "$C/policy.json" "$C/policy.sig" "$PUB/keys/policy-ed25519.pub"
+has_changes "$C/policy.json" || { echo "refusing: the candidate has no \"changes\" list" >&2; exit 1; }
 NEW="$(version_of "$C/policy.json")"
 if [ -f "$S/policy.json" ]; then
   OLD="$(version_of "$S/policy.json")"

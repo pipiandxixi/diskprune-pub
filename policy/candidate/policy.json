@@ -1,7 +1,8 @@
 {
   "schema": 1,
   "pack": "builtin",
-  "version": "2026.10.23.1",
+  "version": "2026.10.23.2",
+  "changes": ["No rules changed. This version only exists to try out the new update flow and this list."],
   "protect": {
     "paths": [
       "~/Library/Application Support/1Password",

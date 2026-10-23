@@ -17,4 +17,4 @@ policy/
 3. On the offline machine, sign it and promote it: `scripts/promote-policy.sh`. This copies `candidate/` to `archive/<version>/` and to `stable/`, and refuses a version that is not higher than the one in `stable/`.
 4. Commit and push. Apps pick it up the next time they check.
 
-Moving `stable/` is the only step that releases anything.
+Moving `stable/` is the only step that releases anything. The full procedure, rollback and what to do about a leaked key are in [PUBLISHING.md](PUBLISHING.md).
