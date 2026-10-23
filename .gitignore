@@ -1,0 +1,5 @@
+.DS_Store
+# private keys must never be committed
+*.key
+*.pem
+*private*
