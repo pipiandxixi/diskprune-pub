@@ -1,0 +1,1112 @@
+{
+  "schema": 1,
+  "pack": "builtin",
+  "version": "2026.10.23.1",
+  "protect": {
+    "paths": [
+      "~/Library/Application Support/1Password",
+      "~/.config/gcloud",
+      "~/.config/gh",
+      "~/.docker/config.json"
+    ],
+    "names": [],
+    "components": []
+  },
+  "rules": [
+    {
+      "id": "system.logs",
+      "kind": "path",
+      "category": "system",
+      "tab": "logs",
+      "title": "Logs and diagnostic reports",
+      "explain": "Crash reports and app logs older than 30 days.",
+      "afterRemoval": "Nothing you need is lost.",
+      "risk": "safe",
+      "action": "trash",
+      "locations": [
+        "~/Library/Logs"
+      ],
+      "granularity": "children",
+      "conditions": {
+        "minAgeDays": 30
+      }
+    },
+    {
+      "id": "system.mail-downloads",
+      "kind": "path",
+      "category": "system",
+      "tab": "backups",
+      "title": "Mail downloads",
+      "explain": "Attachments you have opened from Mail. Originals stay on the mail server.",
+      "afterRemoval": "Attachments are downloaded again when you open them.",
+      "risk": "safe",
+      "action": "trash",
+      "needsFullDiskAccess": true,
+      "locations": [
+        "~/Library/Containers/com.apple.mail/Data/Library/Mail Downloads"
+      ],
+      "granularity": "children"
+    },
+    {
+      "id": "system.ios-backups",
+      "kind": "path",
+      "category": "system",
+      "tab": "backups",
+      "title": "iOS device backups",
+      "explain": "Local backups of iPhones and iPads made from this Mac.",
+      "afterRemoval": "The backup can no longer be used to restore a device.",
+      "risk": "decide",
+      "action": "trash",
+      "needsFullDiskAccess": true,
+      "locations": [
+        "~/Library/Application Support/MobileSync/Backup"
+      ],
+      "granularity": "children"
+    },
+    {
+      "id": "system.trash",
+      "kind": "path",
+      "category": "system",
+      "tab": "trash",
+      "title": "Trash",
+      "explain": "Items already in your Trash.",
+      "afterRemoval": "Emptying the Trash cannot be undone.",
+      "risk": "decide",
+      "action": "permanent",
+      "needsFullDiskAccess": true,
+      "locations": [
+        "~/.Trash"
+      ],
+      "granularity": "children"
+    },
+    {
+      "id": "system.snapshots",
+      "kind": "analyzer",
+      "category": "system",
+      "tab": "snapshots",
+      "title": "Local Time Machine snapshots",
+      "explain": "Local Time Machine snapshots. macOS removes them itself when space is needed and does not say how big each one is.",
+      "risk": "decide",
+      "action": "tool",
+      "analyzer": "tm-snapshots",
+      "afterRemoval": "The snapshot is deleted for good. Backups on your Time Machine disk are not touched."
+    },
+    {
+      "id": "dev.dependencies",
+      "kind": "discovery",
+      "category": "dev",
+      "tab": "deps",
+      "title": "Project dependencies and build output",
+      "explain": "Folders that can be rebuilt from the project's own files.",
+      "afterRemoval": "Run the restore command in the project to bring it back.",
+      "risk": "safe",
+      "action": "trash",
+      "roots": [
+        "~"
+      ],
+      "skipDirs": [
+        "Library",
+        ".Trash",
+        "Applications",
+        "node_modules",
+        "Pictures",
+        "Movies",
+        "Music",
+        "OrbStack",
+        "go",
+        "Dropbox",
+        "Google Drive",
+        "OneDrive",
+        "Creative Cloud Files"
+      ],
+      "maxDepth": 6,
+      "idleDays": 60,
+      "variants": [
+        {
+          "dir": "node_modules",
+          "kind": "Node",
+          "sentinels": [
+            "package.json"
+          ],
+          "restore": "npm install",
+          "restoreBy": [
+            {
+              "file": "pnpm-lock.yaml",
+              "restore": "pnpm install"
+            },
+            {
+              "file": "yarn.lock",
+              "restore": "yarn install"
+            },
+            {
+              "file": "bun.lockb",
+              "restore": "bun install"
+            },
+            {
+              "file": "bun.lock",
+              "restore": "bun install"
+            },
+            {
+              "file": "package-lock.json",
+              "restore": "npm install"
+            }
+          ]
+        },
+        {
+          "dir": "target",
+          "kind": "Rust",
+          "sentinels": [
+            "Cargo.toml"
+          ],
+          "restore": "cargo build"
+        },
+        {
+          "dir": ".venv",
+          "kind": "Python",
+          "requireInside": [
+            "pyvenv.cfg"
+          ],
+          "restore": "recreate the virtualenv",
+          "restoreBy": [
+            {
+              "file": "uv.lock",
+              "restore": "uv sync"
+            },
+            {
+              "file": "poetry.lock",
+              "restore": "poetry install"
+            }
+          ]
+        },
+        {
+          "dir": "venv",
+          "kind": "Python",
+          "requireInside": [
+            "pyvenv.cfg"
+          ],
+          "restore": "recreate the virtualenv",
+          "restoreBy": [
+            {
+              "file": "uv.lock",
+              "restore": "uv sync"
+            },
+            {
+              "file": "poetry.lock",
+              "restore": "poetry install"
+            }
+          ]
+        },
+        {
+          "dir": "Pods",
+          "kind": "CocoaPods",
+          "sentinels": [
+            "Podfile"
+          ],
+          "restore": "pod install"
+        },
+        {
+          "dir": ".build",
+          "kind": "Swift",
+          "sentinels": [
+            "Package.swift"
+          ],
+          "restore": "swift build"
+        }
+      ],
+      "activityIgnore": [
+        "node_modules",
+        "target",
+        "build",
+        "dist",
+        "Pods",
+        ".build",
+        "DerivedData",
+        ".venv",
+        "venv",
+        ".gradle",
+        ".next",
+        ".nuxt",
+        ".git"
+      ]
+    },
+    {
+      "id": "dev.xcode.derived-data",
+      "kind": "path",
+      "category": "dev",
+      "tab": "xcode",
+      "title": "Xcode DerivedData",
+      "explain": "Build products and indexes Xcode recreates on the next build.",
+      "afterRemoval": "The next build is a full build and takes longer.",
+      "risk": "safe",
+      "action": "trash",
+      "locations": [
+        "~/Library/Developer/Xcode/DerivedData"
+      ],
+      "granularity": "children",
+      "conditions": {
+        "minAgeDays": 7
+      }
+    },
+    {
+      "id": "dev.xcode.device-support",
+      "kind": "path",
+      "category": "dev",
+      "tab": "xcode",
+      "title": "Xcode iOS DeviceSupport",
+      "explain": "Symbol files for devices you connected. Downloaded again when a device is connected.",
+      "afterRemoval": "Xcode prepares the device again the next time it is connected.",
+      "risk": "safe",
+      "action": "trash",
+      "locations": [
+        "~/Library/Developer/Xcode/iOS DeviceSupport"
+      ],
+      "granularity": "children",
+      "conditions": {
+        "minAgeDays": 90
+      }
+    },
+    {
+      "id": "dev.package-caches",
+      "kind": "path",
+      "category": "dev",
+      "tab": "pkg",
+      "title": "Package manager caches",
+      "explain": "Downloads kept by npm, Homebrew, Cargo, pip, uv and Gradle.",
+      "afterRemoval": "Packages are downloaded again when needed, so offline installs stop working until then.",
+      "risk": "safe",
+      "action": "trash",
+      "locations": [
+        "~/.npm/_cacache",
+        "~/Library/Caches/Homebrew",
+        "~/.cargo/registry/cache",
+        "~/Library/Caches/pip",
+        "~/.cache/uv",
+        "~/.gradle/caches"
+      ],
+      "granularity": "location"
+    },
+    {
+      "id": "apps.caches",
+      "kind": "path",
+      "category": "apps",
+      "tab": "caches",
+      "title": "App caches",
+      "explain": "Temporary files apps keep so they open faster. Apps rebuild them.",
+      "afterRemoval": "Apps may open a little slower the first time.",
+      "risk": "safe",
+      "action": "trash",
+      "locations": [
+        "~/Library/Caches"
+      ],
+      "granularity": "children",
+      "conditions": {
+        "minBytes": 10000000,
+        "excludeNames": [
+          "Homebrew",
+          "pip"
+        ],
+        "excludeGlobs": [
+          "com.apple.*"
+        ],
+        "skipWhenAppRunning": true
+      }
+    },
+    {
+      "id": "apps.leftovers",
+      "kind": "analyzer",
+      "analyzer": "app-leftovers",
+      "category": "apps",
+      "tab": "leftovers",
+      "title": "Leftovers of apps you removed",
+      "explain": "Data kept by apps that are no longer installed.",
+      "afterRemoval": "The app's saved data and settings are gone. Reinstalling starts fresh.",
+      "risk": "decide",
+      "action": "trash",
+      "needsFullDiskAccess": true,
+      "scopes": [
+        {
+          "path": "~/Library/Saved Application State",
+          "risk": "safe",
+          "label": "Saved window state"
+        },
+        {
+          "path": "~/Library/HTTPStorages",
+          "risk": "safe",
+          "label": "Web storage"
+        },
+        {
+          "path": "~/Library/WebKit",
+          "risk": "safe",
+          "label": "Web data"
+        },
+        {
+          "path": "~/Library/Application Support",
+          "risk": "decide",
+          "label": "App data"
+        },
+        {
+          "path": "~/Library/Containers",
+          "risk": "decide",
+          "label": "App container"
+        },
+        {
+          "path": "~/Library/Group Containers",
+          "risk": "decide",
+          "label": "Shared app data"
+        }
+      ],
+      "conditions": {
+        "minAgeDays": 30,
+        "minBytes": 100000,
+        "excludeGlobs": [
+          "com.apple.*"
+        ]
+      }
+    },
+    {
+      "id": "files.downloads",
+      "kind": "analyzer",
+      "analyzer": "download-clutter",
+      "category": "files",
+      "tab": "downloads",
+      "title": "Installers and extracted archives in Downloads",
+      "explain": "Installer images and packages, and zip files that were already extracted.",
+      "afterRemoval": "You can download an installer again from its source.",
+      "risk": "safe",
+      "action": "trash",
+      "locations": [
+        "~/Downloads"
+      ],
+      "conditions": {
+        "minAgeDays": 14
+      }
+    },
+    {
+      "id": "dev.agents.claude.transcripts",
+      "kind": "path",
+      "category": "dev",
+      "tab": "agents",
+      "title": "Claude Code session transcripts",
+      "explain": "Full conversations kept by Claude Code, one file per session. They can hold pasted keys and file contents.",
+      "afterRemoval": "That session can no longer be resumed. Settings, credentials and project memory are not touched.",
+      "risk": "decide",
+      "action": "trash",
+      "locations": [
+        "${CLAUDE_CONFIG_DIR:-~/.claude}/projects"
+      ],
+      "granularity": "children",
+      "itemKind": "Claude Code · session",
+      "depth": 2,
+      "conditions": {
+        "nameGlob": "*.jsonl",
+        "minAgeDays": 60
+      }
+    },
+    {
+      "id": "dev.agents.claude.file-history",
+      "kind": "path",
+      "category": "dev",
+      "tab": "agents",
+      "title": "Claude Code edit history",
+      "explain": "Copies of files Claude Code edited, used to rewind changes.",
+      "afterRemoval": "Those edits can no longer be rewound.",
+      "risk": "decide",
+      "action": "trash",
+      "locations": [
+        "${CLAUDE_CONFIG_DIR:-~/.claude}/file-history"
+      ],
+      "granularity": "children",
+      "itemKind": "Claude Code · edit history",
+      "conditions": {
+        "minAgeDays": 60
+      }
+    },
+    {
+      "id": "dev.agents.claude.shell-snapshots",
+      "kind": "path",
+      "category": "dev",
+      "tab": "agents",
+      "title": "Claude Code shell snapshots",
+      "explain": "Saved shell environments. Claude Code recreates them.",
+      "afterRemoval": "Nothing is lost.",
+      "risk": "safe",
+      "action": "trash",
+      "locations": [
+        "${CLAUDE_CONFIG_DIR:-~/.claude}/shell-snapshots"
+      ],
+      "granularity": "children",
+      "itemKind": "Claude Code · shell snapshot",
+      "conditions": {
+        "minAgeDays": 7
+      }
+    },
+    {
+      "id": "dev.agents.codex.sessions",
+      "kind": "path",
+      "category": "dev",
+      "tab": "agents",
+      "title": "Codex session transcripts",
+      "explain": "Full conversations kept by Codex (CLI and app), one file per session.",
+      "afterRemoval": "That session can no longer be resumed. Settings and credentials are not touched.",
+      "risk": "decide",
+      "action": "trash",
+      "locations": [
+        "${CODEX_HOME:-~/.codex}/sessions"
+      ],
+      "granularity": "children",
+      "itemKind": "Codex · session",
+      "depth": 4,
+      "conditions": {
+        "nameGlob": "*.jsonl",
+        "minAgeDays": 60
+      }
+    },
+    {
+      "id": "dev.agents.codex.archived",
+      "kind": "path",
+      "category": "dev",
+      "tab": "agents",
+      "title": "Codex archived sessions",
+      "explain": "Sessions Codex moved to its archive.",
+      "afterRemoval": "They can no longer be opened.",
+      "risk": "decide",
+      "action": "trash",
+      "locations": [
+        "${CODEX_HOME:-~/.codex}/archived_sessions"
+      ],
+      "granularity": "children",
+      "itemKind": "Codex · archived session",
+      "conditions": {
+        "nameGlob": "*.jsonl",
+        "minAgeDays": 60
+      }
+    },
+    {
+      "id": "dev.agents.codex.logs",
+      "kind": "path",
+      "category": "dev",
+      "tab": "agents",
+      "title": "Codex logs",
+      "explain": "Diagnostic logs.",
+      "afterRemoval": "Nothing you need is lost.",
+      "risk": "safe",
+      "action": "trash",
+      "locations": [
+        "${CODEX_HOME:-~/.codex}/log"
+      ],
+      "granularity": "children",
+      "itemKind": "Codex · log",
+      "conditions": {
+        "minAgeDays": 30
+      }
+    },
+    {
+      "id": "dev.agents.cursor.snapshots",
+      "kind": "path",
+      "category": "dev",
+      "tab": "agents",
+      "title": "Cursor agent snapshots",
+      "explain": "Checkpoints Cursor's agent saves so you can go back. They grow without a limit.",
+      "afterRemoval": "You can no longer go back to those checkpoints.",
+      "risk": "decide",
+      "action": "trash",
+      "locations": [
+        "~/Library/Application Support/Cursor/snapshots"
+      ],
+      "granularity": "children",
+      "itemKind": "Cursor · snapshot",
+      "conditions": {
+        "minAgeDays": 30,
+        "keepWhileRunning": [
+          "com.todesktop.230313mzl4w4u92",
+          "Cursor"
+        ]
+      }
+    },
+    {
+      "id": "dev.agents.cursor.caches",
+      "kind": "path",
+      "category": "dev",
+      "tab": "agents",
+      "title": "Cursor caches",
+      "explain": "Caches and logs Cursor rebuilds.",
+      "afterRemoval": "Cursor starts a little slower once.",
+      "risk": "safe",
+      "action": "trash",
+      "locations": [
+        "~/Library/Application Support/Cursor"
+      ],
+      "granularity": "children",
+      "itemKind": "Cursor · cache",
+      "conditions": {
+        "includeNames": [
+          "Cache",
+          "CachedData",
+          "CachedExtensionVSIXs",
+          "Code Cache",
+          "GPUCache",
+          "logs"
+        ],
+        "keepWhileRunning": [
+          "com.todesktop.230313mzl4w4u92",
+          "Cursor"
+        ]
+      }
+    },
+    {
+      "id": "dev.agents.cursor.chat-db",
+      "kind": "path",
+      "category": "dev",
+      "tab": "agents",
+      "title": "Cursor chat and agent history",
+      "explain": "One database that holds every Cursor chat. It cannot be trimmed, only removed whole, which deletes all of them.",
+      "afterRemoval": "All Cursor chats and agent history are gone. Restore it from the Trash to get them back.",
+      "risk": "decide",
+      "action": "trash",
+      "locations": [
+        "~/Library/Application Support/Cursor/User/globalStorage/state.vscdb"
+      ],
+      "granularity": "location",
+      "itemKind": "Cursor · chat history"
+    },
+    {
+      "id": "ai.rarely-used",
+      "kind": "analyzer",
+      "analyzer": "ai-models",
+      "view": "rarely-used",
+      "category": "ai",
+      "tab": "cold",
+      "title": "Rarely used models",
+      "explain": "Models nobody has opened for a long time.",
+      "afterRemoval": "The model is moved to the Trash. The tool downloads it again the next time it needs it.",
+      "risk": "decide",
+      "action": "trash",
+      "storeSet": "models",
+      "conditions": {
+        "minBytes": 50000000
+      },
+      "idleDays": 90
+    },
+    {
+      "id": "ai.in-use",
+      "kind": "analyzer",
+      "analyzer": "ai-models",
+      "view": "in-use",
+      "category": "ai",
+      "tab": "all",
+      "title": "Models in regular use",
+      "explain": "Models opened recently.",
+      "afterRemoval": "The model is moved to the Trash. The tool downloads it again the next time it needs it.",
+      "risk": "decide",
+      "action": "trash",
+      "storeSet": "models",
+      "conditions": {
+        "minBytes": 50000000
+      },
+      "idleDays": 90
+    },
+    {
+      "id": "sys.user-caches",
+      "kind": "path",
+      "category": "system",
+      "tab": "temp",
+      "title": "Your private cache folder",
+      "explain": "Caches macOS and apps keep in a private folder outside your home folder.",
+      "afterRemoval": "They are rebuilt when needed.",
+      "risk": "safe",
+      "action": "trash",
+      "locations": [
+        "${USER_CACHE_DIR}"
+      ],
+      "granularity": "children",
+      "conditions": {
+        "minBytes": 1000000,
+        "excludeGlobs": [
+          "com.apple.*"
+        ],
+        "skipWhenAppRunning": true,
+        "ownedByCurrentUser": true
+      },
+      "itemKind": "Private cache"
+    },
+    {
+      "id": "sys.user-temp",
+      "kind": "path",
+      "category": "system",
+      "tab": "temp",
+      "title": "Your private temporary folder",
+      "explain": "Temporary files apps left in a private folder outside your home folder.",
+      "afterRemoval": "Anything an app still needs is recreated.",
+      "risk": "decide",
+      "action": "trash",
+      "locations": [
+        "${USER_TEMP_DIR}"
+      ],
+      "granularity": "children",
+      "conditions": {
+        "minAgeDays": 7,
+        "minBytes": 100000,
+        "excludeGlobs": [
+          ".*",
+          "com.apple.*"
+        ],
+        "ownedByCurrentUser": true
+      },
+      "itemKind": "Private temp"
+    },
+    {
+      "id": "sys.tmp",
+      "kind": "path",
+      "category": "system",
+      "tab": "temp",
+      "title": "Temporary files in /tmp",
+      "explain": "Files you left in the shared temporary folder.",
+      "afterRemoval": "Anything an app still needs is recreated.",
+      "risk": "decide",
+      "action": "trash",
+      "locations": [
+        "/private/tmp"
+      ],
+      "granularity": "children",
+      "conditions": {
+        "minAgeDays": 14,
+        "excludeGlobs": [
+          ".*",
+          "com.apple.*",
+          "powerlog",
+          "*.lock",
+          "*.sock"
+        ],
+        "ownedByCurrentUser": true
+      },
+      "itemKind": "/tmp"
+    },
+    {
+      "id": "sys.homebrew",
+      "kind": "analyzer",
+      "analyzer": "brew-cleanup",
+      "category": "dev",
+      "tab": "pkg",
+      "title": "Homebrew cleanup",
+      "explain": "Old versions and downloads Homebrew no longer needs.",
+      "afterRemoval": "Homebrew downloads them again if you ever need them.",
+      "risk": "safe",
+      "action": "tool"
+    },
+    {
+      "id": "files.messages-attachments",
+      "kind": "path",
+      "category": "files",
+      "tab": "messages",
+      "title": "Messages attachments",
+      "explain": "Photos, videos and files that came in through Messages.",
+      "afterRemoval": "The picture or file is gone from that conversation. The message text stays.",
+      "risk": "decide",
+      "action": "trash",
+      "locations": [
+        "~/Library/Messages/Attachments"
+      ],
+      "granularity": "children",
+      "conditions": {
+        "minAgeDays": 365
+      },
+      "depth": 3,
+      "itemKind": "Messages attachment",
+      "needsFullDiskAccess": true
+    },
+    {
+      "id": "sys.library-caches",
+      "kind": "path",
+      "category": "system",
+      "tab": "macos",
+      "title": "System caches",
+      "explain": "Caches kept for every user of this Mac.",
+      "afterRemoval": "They are rebuilt when needed.",
+      "risk": "safe",
+      "action": "trash",
+      "locations": [
+        "/Library/Caches"
+      ],
+      "granularity": "children",
+      "conditions": {
+        "minBytes": 1000000,
+        "excludeGlobs": [
+          "com.apple.*"
+        ],
+        "skipWhenAppRunning": true
+      },
+      "itemKind": "System cache"
+    },
+    {
+      "id": "sys.library-logs",
+      "kind": "path",
+      "category": "system",
+      "tab": "macos",
+      "title": "System logs",
+      "explain": "Logs and crash reports kept for every user of this Mac.",
+      "afterRemoval": "Nothing you need is lost.",
+      "risk": "safe",
+      "action": "trash",
+      "locations": [
+        "/Library/Logs"
+      ],
+      "granularity": "children",
+      "conditions": {
+        "minAgeDays": 30
+      },
+      "itemKind": "System log"
+    },
+    {
+      "id": "sys.var-log",
+      "kind": "path",
+      "category": "system",
+      "tab": "macos",
+      "title": "Rotated system logs",
+      "explain": "Old, compressed copies of system logs.",
+      "afterRemoval": "Nothing you need is lost.",
+      "risk": "safe",
+      "action": "trash",
+      "locations": [
+        "/private/var/log"
+      ],
+      "granularity": "children",
+      "conditions": {
+        "nameGlobs": [
+          "*.gz",
+          "*.bz2",
+          "*.old"
+        ],
+        "minAgeDays": 14
+      },
+      "itemKind": "Rotated log"
+    },
+    {
+      "id": "sys.software-updates",
+      "kind": "path",
+      "category": "system",
+      "tab": "macos",
+      "title": "Software Update leftovers",
+      "explain": "Downloads macOS kept from past updates.",
+      "afterRemoval": "Software Update downloads what it needs again.",
+      "risk": "decide",
+      "action": "trash",
+      "locations": [
+        "/Library/Updates"
+      ],
+      "granularity": "children",
+      "conditions": {
+        "minAgeDays": 14
+      },
+      "itemKind": "Update leftover"
+    },
+    {
+      "id": "sys.macos-installers",
+      "kind": "path",
+      "category": "system",
+      "tab": "macos",
+      "title": "Old macOS installers",
+      "explain": "Installers for macOS versions you downloaded.",
+      "afterRemoval": "You can download the installer again from Apple.",
+      "risk": "decide",
+      "action": "trash",
+      "locations": [
+        "/Applications"
+      ],
+      "granularity": "children",
+      "conditions": {
+        "nameGlob": "Install macOS*.app"
+      },
+      "itemKind": "macOS installer"
+    },
+    {
+      "id": "sys.sound-libraries",
+      "kind": "path",
+      "category": "system",
+      "tab": "macos",
+      "title": "GarageBand and Logic sound libraries",
+      "explain": "Sound libraries those apps downloaded.",
+      "afterRemoval": "The apps download them again when you ask for them.",
+      "risk": "decide",
+      "action": "trash",
+      "locations": [
+        "/Library/Audio/Apple Loops",
+        "/Library/Application Support/GarageBand",
+        "/Library/Application Support/Logic"
+      ],
+      "granularity": "location",
+      "itemKind": "Sound library"
+    },
+    {
+      "id": "apps.leftovers.system",
+      "kind": "analyzer",
+      "analyzer": "app-leftovers",
+      "category": "apps",
+      "tab": "leftovers",
+      "title": "Leftovers of removed apps (all users)",
+      "explain": "Background services and shared data of apps that are no longer installed.",
+      "afterRemoval": "The app's background parts are gone. Reinstalling sets them up again.",
+      "risk": "decide",
+      "action": "trash",
+      "scopes": [
+        {
+          "path": "/Library/Application Support",
+          "risk": "decide",
+          "label": "App data (all users)"
+        },
+        {
+          "path": "/Library/LaunchAgents",
+          "risk": "decide",
+          "label": "Launch agent"
+        },
+        {
+          "path": "/Library/LaunchDaemons",
+          "risk": "decide",
+          "label": "Background service"
+        },
+        {
+          "path": "/Library/PrivilegedHelperTools",
+          "risk": "decide",
+          "label": "Helper tool"
+        }
+      ],
+      "conditions": {
+        "minAgeDays": 30,
+        "excludeGlobs": [
+          "com.apple.*"
+        ]
+      }
+    }
+  ],
+  "storeSets": {
+    "models": [
+      {
+        "path": "${OLLAMA_MODELS:-~/.ollama/models}",
+        "tool": "Ollama",
+        "layout": "ollama"
+      },
+      {
+        "path": "${HF_HOME:-~/.cache/huggingface}/hub",
+        "tool": "Hugging Face",
+        "layout": "huggingface"
+      },
+      {
+        "path": "~/.lmstudio/models",
+        "tool": "LM Studio",
+        "layout": "files",
+        "extensions": [
+          ".gguf",
+          ".safetensors"
+        ]
+      },
+      {
+        "path": "~/.cache/lm-studio/models",
+        "tool": "LM Studio",
+        "layout": "files",
+        "extensions": [
+          ".gguf",
+          ".safetensors"
+        ]
+      },
+      {
+        "path": "~/Library/Caches/llama.cpp",
+        "tool": "llama.cpp",
+        "layout": "files",
+        "extensions": [
+          ".gguf"
+        ]
+      },
+      {
+        "path": "~/jan/models",
+        "tool": "Jan",
+        "layout": "files",
+        "extensions": [
+          ".gguf"
+        ]
+      },
+      {
+        "path": "~/ComfyUI/models",
+        "tool": "ComfyUI",
+        "layout": "files",
+        "extensions": [
+          ".safetensors",
+          ".ckpt",
+          ".pt",
+          ".pth"
+        ]
+      },
+      {
+        "path": "~/Documents/ComfyUI/models",
+        "tool": "ComfyUI",
+        "layout": "files",
+        "extensions": [
+          ".safetensors",
+          ".ckpt",
+          ".pt",
+          ".pth"
+        ]
+      }
+    ]
+  },
+  "footprint": {
+    "homeDefault": "files",
+    "skip": [
+      "~/Library/Developer/XCTestDevices"
+    ],
+    "rules": [
+      {
+        "path": "~/Library",
+        "bucket": "apps"
+      },
+      {
+        "path": "~/Library/Developer",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/Library/Containers/com.docker.docker",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/Library/Application Support/Cursor",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/Library/Application Support/Code",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.cargo",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.rustup",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.npm",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.pnpm-store",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.gradle",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.m2",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/go",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.docker",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.orbstack",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.claude",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.codex",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.cursor",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.vscode",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.cache",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.local",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.nvm",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.pyenv",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.bun",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.volta",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.pub-cache",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.cocoapods",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.gem",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/.conda",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/miniconda3",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/anaconda3",
+        "bucket": "dev"
+      },
+      {
+        "path": "~/Library/Messages",
+        "bucket": "files"
+      },
+      {
+        "path": "~/Library/Mail",
+        "bucket": "files"
+      },
+      {
+        "path": "~/Library/Mobile Documents",
+        "bucket": "files"
+      },
+      {
+        "path": "~/Library/CloudStorage",
+        "bucket": "files"
+      }
+    ],
+    "extraRoots": [
+      {
+        "path": "/Applications",
+        "bucket": "apps"
+      },
+      {
+        "path": "/Library/Developer",
+        "bucket": "dev"
+      },
+      {
+        "path": "/opt/homebrew",
+        "bucket": "dev"
+      },
+      {
+        "path": "/usr/local",
+        "bucket": "dev"
+      }
+    ]
+  }
+}
